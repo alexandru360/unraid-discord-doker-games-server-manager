@@ -100,7 +100,10 @@ public class DockerModule : InteractionModuleBase<SocketInteractionContext>
 
         if (containers.Count == 0)
         {
-            await RespondAsync("No containers are configured.");
+            if (!Context.Interaction.HasResponded)
+                await RespondAsync("No containers are configured.");
+            else
+                await FollowupAsync("No containers are configured.");
             return;
         }
 
@@ -115,7 +118,10 @@ public class DockerModule : InteractionModuleBase<SocketInteractionContext>
                 $"Container ID: `{c.ContainerId}`\n{c.Description}",
                 false);
 
-        await RespondAsync(embed: embed.Build());
+        if (!Context.Interaction.HasResponded)
+            await RespondAsync(embed: embed.Build());
+        else
+            await FollowupAsync(embed: embed.Build());
     }
 
     /// <summary>Shows the last N log lines from a container.</summary>
