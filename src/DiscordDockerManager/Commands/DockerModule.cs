@@ -95,14 +95,12 @@ public class DockerModule : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("list", "List all configured Docker containers")]
     public async Task ListAsync()
     {
-        await DeferAsync();
-
         await using var db = await _dbFactory.CreateDbContextAsync();
         var containers = await db.DockerContainerConfigs.Where(c => c.IsEnabled).ToListAsync();
 
         if (containers.Count == 0)
         {
-            await FollowupAsync("No containers are configured.");
+            await RespondAsync("No containers are configured.");
             return;
         }
 
@@ -117,7 +115,7 @@ public class DockerModule : InteractionModuleBase<SocketInteractionContext>
                 $"Container ID: `{c.ContainerId}`\n{c.Description}",
                 false);
 
-        await FollowupAsync(embed: embed.Build());
+        await RespondAsync(embed: embed.Build());
     }
 
     /// <summary>Shows the last N log lines from a container.</summary>
