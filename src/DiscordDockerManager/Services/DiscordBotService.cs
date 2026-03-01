@@ -258,7 +258,9 @@ public class DiscordBotService : BackgroundService
 
         foreach (var c in containers)
         {
-            var status = statusLookup.TryGetValue(c.ContainerId, out var s) ? s : (false, string.Empty, string.Empty);
+            (bool Found, string State, string Status) status = statusLookup.TryGetValue(c.ContainerId, out var s)
+                ? s
+                : (Found: false, State: string.Empty, Status: string.Empty);
 
             var (icon, stateText) = status switch
             {
