@@ -198,8 +198,8 @@ public class DiscordBotService : BackgroundService
             : "none";
 
         var content = ":wave: Hubdex online.\n"
-                      + $"Prefix: `{prefix}` | Slash: `/docker` `/players`.\n"
-                      + $"Running now: {runningText}. Try `{prefix} list` or `/docker list`.";
+                  + $"Prefix: `{prefix}` | Slash commands ready.\n"
+                  + $"Running now: {runningText}. Try `{prefix} list`.";
 
         await channel.SendMessageAsync(content, embed: embed);
         _logger.LogInformation("Posted startup status to channel {ChannelId}.", _config.HelpChannelId);

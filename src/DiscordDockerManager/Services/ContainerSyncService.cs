@@ -47,6 +47,7 @@ public class ContainerSyncService
         }
 
         await using var db = await _dbFactory.CreateDbContextAsync(ct);
+        var allowedNames = new HashSet<string>(allEntries.Select(e => e.Name), StringComparer.OrdinalIgnoreCase);
 
         foreach (var entry in allEntries)
         {
@@ -82,6 +83,20 @@ public class ContainerSyncService
                 existing.PlayerJoinPattern = entry.PlayerJoinPattern;
                 existing.PlayerLeavePattern = entry.PlayerLeavePattern;
                 _logger.LogInformation("Updated container config '{Name}' from appsettings.", entry.Name);
+            }
+        }
+
+        // Disable configs no longer present in appsettings/managed CSV to avoid stale duplicates.
+        var stale = await db.DockerContainerConfigs
+            .Where(c => !allowedNames.Contains(c.Name))
+            .ToListAsync(ct);
+
+        foreach (var entry in stale)
+        {
+            if (entry.IsEnabled)
+            {
+                entry.IsEnabled = false;
+                _logger.LogInformation("Disabled stale container config '{Name}' not present in current configuration.", entry.Name);
             }
         }
 
