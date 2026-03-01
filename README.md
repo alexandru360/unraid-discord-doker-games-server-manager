@@ -1,21 +1,21 @@
 # unraid-discord-doker-games-server-manager
-[![Build & Publish](https://img.shields.io/github/actions/workflow/status/alex360/unraid-discord-doker-games-server-manager/docker-publish.yml?branch=main&label=CI%2FCD)](https://github.com/alex360/unraid-discord-doker-games-server-manager/actions/workflows/docker-publish.yml)
-[![Docker Hub](https://img.shields.io/docker/v/alex360/unraid-discord-docker-manager?logo=docker&label=image)](https://hub.docker.com/r/alex360/unraid-discord-docker-manager)
-[![Docker Pulls](https://img.shields.io/docker/pulls/alex360/unraid-discord-docker-manager?logo=docker)](https://hub.docker.com/r/alex360/unraid-discord-docker-manager)
+[![Build & Publish](https://img.shields.io/github/actions/workflow/status/alexandru360/unraid-discord-doker-games-server-manager/docker-publish.yml?branch=main&label=CI%2FCD)](https://github.com/alexandru360/unraid-discord-doker-games-server-manager/actions/workflows/docker-publish.yml)
+[![Docker Hub](https://img.shields.io/docker/v/alex360/unraid-discord-docker-manager?logo=docker&label=image)](https://hub.docker.com/repository/docker/alex360/unraid-discord-docker-manager/general)
+[![Docker Pulls](https://img.shields.io/docker/pulls/alex360/unraid-discord-docker-manager?logo=docker)](https://hub.docker.com/repository/docker/alex360/unraid-discord-docker-manager/general)
 
-Doker games server manager: a Discord bot that can start/stop game containers and monitor player events over Docker logs.
+Docker games server manager: a Discord bot that can start/stop game containers and monitor player events over Docker logs.
 
-## Cum funcționează pipeline-ul Docker
-- Build: verifică și compilează soluția .NET 8 (Release).
-- Test: rulează testele unitare pe output-ul de build.
-- Publish: dacă push-ul este pe `main` și testele au trecut, imaginea se construiește din Dockerfile (fără a include proiectul de teste) și se împinge în Docker Hub ca `latest` și `sha-<commit>`.
+## How the Docker pipeline works
+- Build: verifies and compiles the .NET 8 solution (Release).
+- Test: runs unit tests on the build output.
+- Publish: if the push is on `main` and the tests have passed, the image is built from the Dockerfile (without including the test project) and pushed to Docker Hub as `latest` and `sha-<commit>`.
 
 ## Cum rulezi imaginea
 1) Creează un fișier `appsettings.Production.json` sau folosește variabile de mediu pentru configurare.
 2) Montează socket-ul Docker și un volum la `/data` pentru baza de date/config.
 3) Pornește containerul folosind tag-ul `latest` (sau `sha-...` pentru o versiune fixă).
 
-Exemplu rapid:
+Quick example:
 ```bash
 docker run -d \
 	--name discord-docker-manager \
@@ -28,16 +28,15 @@ docker run -d \
 	alex360/unraid-discord-docker-manager:latest
 ```
 
-Variabile utile (prefixate conform opțiunilor .NET):
-- `Discord__Token`: token-ul botului (obligatoriu).
-- `Discord__GuildId`: opțional, pentru înregistrarea instantă a slash-commands.
+Useful environment variables (prefixed per .NET options convention):
+- `Discord__Token`: bot token (required).
+- `Discord__GuildId`: optional, for instant slash-command registration.
 - `Docker__Endpoint`: default `unix:///var/run/docker.sock`.
-- `Database__ConnectionString`: default `Data Source=gamemanager.db` (poți indica un fișier într-un volum montat).
-	Default este acum `Data Source=/data/gamemanager.db` (în volumul montat).
+- `Database__ConnectionString`: default `Data Source=/data/gamemanager.db` (în volumul montat; poți schimba după nevoie).
 - `Ollama__Enabled`, `Ollama__BaseUrl`, `Ollama__Model`: pentru integrarea Ollama (opțional).
 
-## Instalare pe Unraid
-- În UI-ul Unraid, Apps → Add Container → Template nou.
+## Installing on Unraid
+- In the Unraid UI, go to Apps → Add Container → New Template.
 - Image: `alex360/unraid-discord-docker-manager:latest`.
 - Volume mappings:
 	- `/var/run/docker.sock` → `/var/run/docker.sock` (read/write) pentru a controla containerele.
