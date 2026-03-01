@@ -21,7 +21,7 @@ docker run -d \
 	--name discord-docker-manager \
 	--restart unless-stopped \
 	-v /var/run/docker.sock:/var/run/docker.sock \
-	-v /mnt/user/appdata/diskord-doker-manager:/data \
+	-v /mnt/user/appdata/discord-doker-manager:/data \
 	-e Discord__Token="YOUR_DISCORD_TOKEN" \
 	-e Discord__GuildId=123456789012345678 \
 	-e Database__ConnectionString="Data Source=/data/db/gamemanager.db" \
@@ -42,7 +42,7 @@ Useful environment variables (prefixed per .NET options convention):
 - Image: `alex360/unraid-discord-docker-manager:latest`.
 - Volume mappings:
 	- `/var/run/docker.sock` → `/var/run/docker.sock` (read/write) to control containers.
-	- `/mnt/user/appdata/diskord-doker-manager` → `/data` for DB, logs, and config (subfolders are created automatically).
+	- `/mnt/user/appdata/discord-doker-manager` → `/data` for DB, logs, and config (subfolders are created automatically).
 - Environment vars: set at least `Discord__Token`; optionally `Discord__GuildId`, `Docker__Endpoint`, `Database__ConnectionString`, `Ollama__*`.
 - Network: `bridge` is sufficient; adjust if your game containers live on another network.
 - Save and start the container; check the logs for confirmation and any connection issues to Discord or Docker.

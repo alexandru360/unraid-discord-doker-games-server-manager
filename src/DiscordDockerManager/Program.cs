@@ -23,9 +23,13 @@ var bootstrapConfig = new ConfigurationBuilder()
 
 var bootstrapStorageRoot = bootstrapConfig["Storage:Root"] ?? "/data";
 var bootstrapConfigPath = bootstrapConfig["Storage:ConfigPath"] ?? Path.Combine(bootstrapStorageRoot, "config");
-EnsureDirectory(bootstrapConfigPath);
-var externalConfigPath = Path.Combine(bootstrapConfigPath, "appsettings.json");
-SyncExternalConfigVersion(bundledConfigPath, externalConfigPath, logger: null);
+var externalConfigEnv = Environment.GetEnvironmentVariable("ExternalConfig");
+var bootstrapExternalConfigPath = !string.IsNullOrWhiteSpace(externalConfigEnv)
+    ? externalConfigEnv
+    : Path.Combine(bootstrapConfigPath, "appsettings.json");
+
+EnsureDirectory(Path.GetDirectoryName(bootstrapExternalConfigPath) ?? string.Empty);
+SyncExternalConfigVersion(bundledConfigPath, bootstrapExternalConfigPath, logger: null);
 
 var host = Host.CreateDefaultBuilder(args)
     .UseSerilog((ctx, services, loggerCfg) =>
@@ -37,11 +41,18 @@ var host = Host.CreateDefaultBuilder(args)
     })
     .ConfigureAppConfiguration((ctx, cfg) =>
     {
+        var externalConfigEnv = Environment.GetEnvironmentVariable("ExternalConfig");
+        var storageRoot = ctx.Configuration["Storage:Root"] ?? "/data"; // may be empty this early; fallback
+        var configPath = ctx.Configuration["Storage:ConfigPath"] ?? Path.Combine(storageRoot, "config");
+        var externalConfigPath = !string.IsNullOrWhiteSpace(externalConfigEnv)
+            ? externalConfigEnv
+            : Path.Combine(configPath, "appsettings.json");
+
         cfg.SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", false, true)
             .AddJsonFile($"appsettings.{ctx.HostingEnvironment.EnvironmentName}.json", true, true)
-            .AddJsonFile("/data/config/appsettings.json", true, true)
-            .AddEnvironmentVariables();
+            .AddEnvironmentVariables()
+            .AddJsonFile(externalConfigPath, true, true);
     })
     .ConfigureServices((ctx, services) =>
     {
@@ -109,6 +120,16 @@ using (var scope = host.Services.CreateScope())
     var bundledConfig = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
     var externalConfig = Path.Combine(configPath, "appsettings.json");
     EnsureConfigFile(bundledConfig, externalConfig, logger);
+
+    externalConfigEnv = Environment.GetEnvironmentVariable("ExternalConfig");
+    if (!string.IsNullOrWhiteSpace(externalConfigEnv) && !externalConfigEnv.Equals(externalConfig, StringComparison.OrdinalIgnoreCase))
+    {
+        logger.LogInformation("ExternalConfig env var set; using {ExternalConfigPath} which overrides environment variables and built-in appsettings.", externalConfigEnv);
+    }
+    else
+    {
+        logger.LogInformation("External config path resolved to {ExternalConfigPath}; it overrides environment variables when present.", externalConfig);
+    }
 
     try
     {
