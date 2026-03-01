@@ -71,7 +71,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: alex360/unraid-discord-docker-manager
+          images: ${{ vars.DOCKERHUB_USERNAME }}/unraid-discord-docker-manager
           tags: |
             type=sha,prefix=sha-
             type=raw,value=latest
