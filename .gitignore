@@ -39,3 +39,15 @@
 
 # debug information files
 *.dwo
+
+# .NET build artifacts
+[Bb]in/
+[Oo]bj/
+*.user
+.vs/
+*.suo
+*.ncrunch*
+TestResults/
+*.db
+*.db-shm
+*.db-wal
