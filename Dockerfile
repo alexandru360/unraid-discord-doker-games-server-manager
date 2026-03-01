@@ -2,12 +2,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
-COPY DiscordDockerManager.slnx ./
 COPY src/DiscordDockerManager/DiscordDockerManager.csproj src/DiscordDockerManager/
-COPY tests/DiscordDockerManager.Tests/DiscordDockerManager.Tests.csproj tests/DiscordDockerManager.Tests/
-RUN dotnet restore
+RUN dotnet restore src/DiscordDockerManager/DiscordDockerManager.csproj
 
-COPY . .
+COPY src/ src/
 RUN dotnet publish src/DiscordDockerManager/DiscordDockerManager.csproj -c Release -o /app/publish --no-restore
 
 # Runtime stage

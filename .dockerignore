@@ -1,0 +1,9 @@
+.git
+.github
+.idea
+.vs
+**/bin
+**/obj
+tests
+Dockerfile
+docker-compose.yml
