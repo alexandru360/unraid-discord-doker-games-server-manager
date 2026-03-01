@@ -13,6 +13,16 @@ public class DiscordConfig
     ///     Set to 0 to register globally (takes up to 1 hour to propagate).
     /// </summary>
     public ulong GuildId { get; set; }
+
+    /// <summary>
+    ///     Optional: Channel ID where the bot posts startup status/help. If 0, no startup post is sent.
+    /// </summary>
+    public ulong HelpChannelId { get; set; }
+
+    /// <summary>
+    ///     Text prefix for simple message commands (e.g., "hbot"). Defaults to "hbot".
+    /// </summary>
+    public string TextPrefix { get; set; } = "hbot";
 }
 
 /// <summary>
