@@ -11,6 +11,8 @@ RUN dotnet publish src/DiscordDockerManager/DiscordDockerManager.csproj -c Relea
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/runtime:8.0 AS final
 WORKDIR /app
+RUN mkdir -p /data
+VOLUME ["/data"]
 COPY --from=build /app/publish .
 
 ENTRYPOINT ["dotnet", "DiscordDockerManager.dll"]

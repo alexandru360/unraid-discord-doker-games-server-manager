@@ -12,7 +12,7 @@ Doker games server manager: a Discord bot that can start/stop game containers an
 
 ## Cum rulezi imaginea
 1) Creează un fișier `appsettings.Production.json` sau folosește variabile de mediu pentru configurare.
-2) Montează socket-ul Docker și un volum pentru date (DB/config).
+2) Montează socket-ul Docker și un volum la `/data` pentru baza de date/config.
 3) Pornește containerul folosind tag-ul `latest` (sau `sha-...` pentru o versiune fixă).
 
 Exemplu rapid:
@@ -21,10 +21,10 @@ docker run -d \
 	--name discord-docker-manager \
 	--restart unless-stopped \
 	-v /var/run/docker.sock:/var/run/docker.sock \
-	-v /opt/discord-docker-manager/data:/app/data \
+	-v /opt/discord-docker-manager/data:/data \
 	-e Discord__Token="YOUR_DISCORD_TOKEN" \
 	-e Discord__GuildId=123456789012345678 \
-	-e Database__ConnectionString="Data Source=/app/data/gamemanager.db" \
+	-e Database__ConnectionString="Data Source=/data/gamemanager.db" \
 	alex360/unraid-discord-docker-manager:latest
 ```
 
@@ -33,6 +33,7 @@ Variabile utile (prefixate conform opțiunilor .NET):
 - `Discord__GuildId`: opțional, pentru înregistrarea instantă a slash-commands.
 - `Docker__Endpoint`: default `unix:///var/run/docker.sock`.
 - `Database__ConnectionString`: default `Data Source=gamemanager.db` (poți indica un fișier într-un volum montat).
+	Default este acum `Data Source=/data/gamemanager.db` (în volumul montat).
 - `Ollama__Enabled`, `Ollama__BaseUrl`, `Ollama__Model`: pentru integrarea Ollama (opțional).
 
 ## Instalare pe Unraid
@@ -40,7 +41,7 @@ Variabile utile (prefixate conform opțiunilor .NET):
 - Image: `alex360/unraid-discord-docker-manager:latest`.
 - Volume mappings:
 	- `/var/run/docker.sock` → `/var/run/docker.sock` (read/write) pentru a controla containerele.
-	- `/mnt/user/appdata/discord-docker-manager` → `/app/data` pentru DB și config.
+	- `/mnt/user/appdata/discord-docker-manager` → `/data` pentru DB și config.
 - Environment vars: setează cel puțin `Discord__Token`; opțional `Discord__GuildId`, `Docker__Endpoint`, `Database__ConnectionString`, `Ollama__*`.
 - Network: `bridge` e suficient; dacă ai containere pe altă rețea, adaptează după nevoie.
 - Salvează și pornește containerul; verifică log-urile pentru confirmare și pentru eventuale erori de conectare la Discord sau Docker.

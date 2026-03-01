@@ -1,8 +1,10 @@
+using System.IO;
 using Discord.Interactions;
 using Discord.WebSocket;
 using DiscordDockerManager.Config;
 using DiscordDockerManager.Data;
 using DiscordDockerManager.Services;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,7 +31,7 @@ var host = Host.CreateDefaultBuilder(args)
         services.Configure<List<ContainerConfigEntry>>(config.GetSection("Containers"));
 
         // --- Database ---
-        var dbConnectionString = config.GetSection("Database")["ConnectionString"] ?? "Data Source=gamemanager.db";
+        var dbConnectionString = config.GetSection("Database")["ConnectionString"] ?? "Data Source=/data/gamemanager.db";
         services.AddDbContextFactory<AppDbContext>(options =>
             options.UseSqlite(dbConnectionString));
 
@@ -66,9 +68,13 @@ var host = Host.CreateDefaultBuilder(args)
 using (var scope = host.Services.CreateScope())
 {
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
     try
     {
+        var dbConnectionString = configuration.GetSection("Database")["ConnectionString"] ?? "Data Source=/data/gamemanager.db";
+        EnsureSqliteDirectory(dbConnectionString, logger);
+
         var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
         await using var db = await dbFactory.CreateDbContextAsync();
         await db.Database.MigrateAsync();
@@ -92,6 +98,37 @@ using (var scope = host.Services.CreateScope())
 }
 
 await host.RunAsync();
+
+static void EnsureSqliteDirectory(string connectionString, ILogger logger)
+{
+    try
+    {
+        var builder = new SqliteConnectionStringBuilder(connectionString);
+        var dataSource = builder.DataSource;
+        if (string.IsNullOrWhiteSpace(dataSource))
+        {
+            logger.LogWarning("SQLite connection string has no DataSource; skipping directory creation.");
+            return;
+        }
+
+        var rootedPath = Path.IsPathRooted(dataSource)
+            ? dataSource
+            : Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, dataSource));
+
+        var directory = Path.GetDirectoryName(rootedPath);
+        if (string.IsNullOrWhiteSpace(directory))
+        {
+            return;
+        }
+
+        Directory.CreateDirectory(directory);
+        logger.LogInformation("Ensured SQLite directory exists at {Directory}", directory);
+    }
+    catch (Exception ex)
+    {
+        logger.LogWarning(ex, "Unable to ensure SQLite directory for connection string.");
+    }
+}
 
 // Needed for test project to reference as partial class
 public partial class Program { }

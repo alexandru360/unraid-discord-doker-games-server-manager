@@ -33,7 +33,7 @@ public class DockerConfig
 public class DatabaseConfig
 {
     /// <summary>EF Core connection string (e.g. <c>Data Source=gamemanager.db</c>).</summary>
-    public string ConnectionString { get; set; } = "Data Source=gamemanager.db";
+    public string ConnectionString { get; set; } = "Data Source=/data/gamemanager.db";
 }
 
 /// <summary>
