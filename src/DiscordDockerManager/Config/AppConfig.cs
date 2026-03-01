@@ -25,6 +25,12 @@ public class DockerConfig
     ///     Default is the Unix socket: <c>unix:///var/run/docker.sock</c>.
     /// </summary>
     public string Endpoint { get; set; } = "unix:///var/run/docker.sock";
+
+    /// <summary>
+    ///     Comma-separated list of container names/IDs to manage (optional convenience).
+    ///     Each entry will be created as a managed container if not already defined in the Containers section.
+    /// </summary>
+    public string ManagedContainers { get; set; } = string.Empty;
 }
 
 /// <summary>

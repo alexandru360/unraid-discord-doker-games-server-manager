@@ -14,6 +14,7 @@ namespace DiscordDockerManager.Services;
 public class ContainerSyncService
 {
     private readonly List<ContainerConfigEntry> _containerEntries;
+    private readonly string _managedContainersCsv;
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
     private readonly ILogger<ContainerSyncService> _logger;
 
@@ -21,11 +22,13 @@ public class ContainerSyncService
     public ContainerSyncService(
         IDbContextFactory<AppDbContext> dbFactory,
         IOptions<List<ContainerConfigEntry>> containerEntries,
+        IOptions<DockerConfig> dockerConfig,
         ILogger<ContainerSyncService> logger)
     {
         _dbFactory = dbFactory;
         _logger = logger;
         _containerEntries = containerEntries.Value;
+        _managedContainersCsv = dockerConfig.Value.ManagedContainers;
     }
 
     /// <summary>
@@ -34,7 +37,10 @@ public class ContainerSyncService
     /// </summary>
     public async Task SyncAsync(CancellationToken ct = default)
     {
-        if (_containerEntries.Count == 0)
+        var allEntries = new List<ContainerConfigEntry>(_containerEntries);
+        AppendManagedContainersFromCsv(allEntries);
+
+        if (allEntries.Count == 0)
         {
             _logger.LogInformation("No container entries found in configuration to sync.");
             return;
@@ -42,7 +48,7 @@ public class ContainerSyncService
 
         await using var db = await _dbFactory.CreateDbContextAsync(ct);
 
-        foreach (var entry in _containerEntries)
+        foreach (var entry in allEntries)
         {
             if (string.IsNullOrWhiteSpace(entry.Name))
             {
@@ -80,5 +86,35 @@ public class ContainerSyncService
         }
 
         await db.SaveChangesAsync(ct);
+    }
+
+    private void AppendManagedContainersFromCsv(List<ContainerConfigEntry> entries)
+    {
+        if (string.IsNullOrWhiteSpace(_managedContainersCsv)) return;
+
+        var tokens = _managedContainersCsv
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        foreach (var token in tokens)
+        {
+            var existing = entries.FirstOrDefault(e =>
+                string.Equals(e.Name, token, StringComparison.OrdinalIgnoreCase));
+            if (existing is not null)
+            {
+                continue;
+            }
+
+            entries.Add(new ContainerConfigEntry
+            {
+                Name = token,
+                ContainerId = token,
+                Description = "Managed via Docker.ManagedContainers",
+                Game = "Generic",
+                IsEnabled = true
+            });
+            _logger.LogInformation("Added managed container from CSV: {Container}", token);
+        }
     }
 }

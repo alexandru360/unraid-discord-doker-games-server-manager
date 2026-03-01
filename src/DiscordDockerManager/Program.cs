@@ -1,4 +1,3 @@
-using System.IO;
 using System.Text.RegularExpressions;
 using Discord;
 using Discord.Interactions;
@@ -18,7 +17,7 @@ using DiscordConfig = DiscordDockerManager.Config.DiscordConfig;
 var bundledConfigPath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
 var bootstrapConfig = new ConfigurationBuilder()
     .SetBasePath(AppContext.BaseDirectory)
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .AddEnvironmentVariables()
     .Build();
 
@@ -32,7 +31,7 @@ var host = Host.CreateDefaultBuilder(args)
     .UseSerilog((ctx, services, loggerCfg) =>
     {
         loggerCfg
-            .ReadFrom.Configuration(ctx.Configuration, sectionName: "Serilog", optional: false)
+            .ReadFrom.Configuration(ctx.Configuration, sectionName: "Serilog")
             .ReadFrom.Services(services)
             .Enrich.FromLogContext();
     })
@@ -183,11 +182,6 @@ static void EnsureDirectory(string? path)
     }
 }
 
-// Needed for test project to reference as partial class
-public partial class Program
-{
-}
-
 static void EnsureConfigFile(string sourcePath, string targetPath, ILogger<Program> logger)
 {
     try
@@ -225,7 +219,7 @@ static void SyncExternalConfigVersion(string bundledPath, string externalPath, I
         {
             Directory.CreateDirectory(Path.GetDirectoryName(externalPath) ?? string.Empty);
             File.Copy(bundledPath, externalPath, true);
-            LogInfo(logger, "Seeded external config {ExternalPath} (missing)", externalPath);
+            logger?.LogInformation("Seeded external config {ExternalPath} (missing)", externalPath);
             return;
         }
 
@@ -235,12 +229,12 @@ static void SyncExternalConfigVersion(string bundledPath, string externalPath, I
             var backupPath = NextBackupPath(externalPath);
             File.Move(externalPath, backupPath);
             File.Copy(bundledPath, externalPath, true);
-            LogInfo(logger, "External config upgraded from version {OldVersion} to {NewVersion}; backup saved to {BackupPath}", externalVersion, bundledVersion, backupPath);
+            logger?.LogInformation("External config upgraded from version {OldVersion} to {NewVersion}; backup saved to {BackupPath}", externalVersion, bundledVersion, backupPath);
         }
     }
     catch (Exception ex)
     {
-        LogWarn(logger, ex, "Failed to sync external config version for {ExternalPath}", externalPath);
+        logger?.LogWarning(ex, "Failed to sync external config version for {ExternalPath}", externalPath);
     }
 }
 
@@ -285,26 +279,7 @@ static string NextBackupPath(string externalPath)
     return Path.Combine(dir, $"{file}.{next}.bak");
 }
 
-static void LogInfo(ILogger<Program>? logger, string message, params object[] args)
+// Needed for test project to reference as partial class
+public partial class Program
 {
-    if (logger != null)
-    {
-        logger.LogInformation(message, args);
-    }
-    else
-    {
-        Console.WriteLine(message, args);
-    }
-}
-
-static void LogWarn(ILogger<Program>? logger, Exception ex, string message, params object[] args)
-{
-    if (logger != null)
-    {
-        logger.LogWarning(ex, message, args);
-    }
-    else
-    {
-        Console.WriteLine($"WARN: {message} :: {ex.Message}", args);
-    }
 }

@@ -95,6 +95,41 @@ public class DockerService : IDisposable
     }
 
     /// <summary>
+    ///     Gets statuses for multiple containers in one Docker API call.
+    /// </summary>
+    public async Task<Dictionary<string, (bool Found, string State, string Status)>> GetContainerStatusesAsync(
+        IEnumerable<string> containerIdsOrNames,
+        CancellationToken ct = default)
+    {
+        var identifiers = containerIdsOrNames.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        var result = identifiers.ToDictionary(id => id, _ => (Found: false, State: string.Empty, Status: string.Empty),
+            StringComparer.OrdinalIgnoreCase);
+
+        try
+        {
+            var containers = await _client.Containers.ListContainersAsync(new ContainersListParameters { All = true }, ct);
+
+            foreach (var id in identifiers)
+            {
+                var match = containers.FirstOrDefault(c =>
+                    c.ID.StartsWith(id, StringComparison.OrdinalIgnoreCase) ||
+                    c.Names.Any(n => n.TrimStart('/').Equals(id, StringComparison.OrdinalIgnoreCase)));
+
+                if (match is not null)
+                {
+                    result[id] = (true, match.State, match.Status);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve bulk container statuses.");
+        }
+
+        return result;
+    }
+
+    /// <summary>
     ///     Retrieves the last <paramref name="lines" /> lines from a container's logs.
     /// </summary>
     public async Task<DockerOperationResult> GetContainerLogsAsync(string containerIdOrName, int lines = 50,
