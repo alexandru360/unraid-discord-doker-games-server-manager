@@ -1,7 +1,7 @@
 namespace DiscordDockerManager.Models;
 
 /// <summary>
-/// Configuration record for a managed Docker container / game server.
+///     Configuration record for a managed Docker container / game server.
 /// </summary>
 public class DockerContainerConfig
 {

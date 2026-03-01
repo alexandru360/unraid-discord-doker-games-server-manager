@@ -1,25 +1,25 @@
+using System.Reflection;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Reflection;
 using AppDiscordConfig = DiscordDockerManager.Config.DiscordConfig;
 
 namespace DiscordDockerManager.Services;
 
 /// <summary>
-/// Hosted background service that manages the Discord bot lifecycle:
-/// connects, registers slash commands, and dispatches interactions.
+///     Hosted background service that manages the Discord bot lifecycle:
+///     connects, registers slash commands, and dispatches interactions.
 /// </summary>
 public class DiscordBotService : BackgroundService
 {
     private readonly DiscordSocketClient _client;
-    private readonly InteractionService _interactions;
-    private readonly IServiceProvider _serviceProvider;
     private readonly AppDiscordConfig _config;
+    private readonly InteractionService _interactions;
     private readonly ILogger<DiscordBotService> _logger;
+    private readonly IServiceProvider _serviceProvider;
 
     /// <summary>Initialises the service.</summary>
     public DiscordBotService(
@@ -36,7 +36,7 @@ public class DiscordBotService : BackgroundService
         _logger = logger;
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _client.Log += LogAsync;

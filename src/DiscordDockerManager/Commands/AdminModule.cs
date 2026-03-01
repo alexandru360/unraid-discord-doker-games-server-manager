@@ -9,15 +9,15 @@ using Microsoft.Extensions.Logging;
 namespace DiscordDockerManager.Commands;
 
 /// <summary>
-/// Admin-only Discord slash commands for managing permissions and container configs (<c>/admin</c>).
+///     Admin-only Discord slash commands for managing permissions and container configs (<c>/admin</c>).
 /// </summary>
 [Group("admin", "Admin commands for managing permissions and containers")]
 public class AdminModule : InteractionModuleBase<SocketInteractionContext>
 {
-    private readonly PermissionService _permissionService;
     private readonly ContainerSyncService _containerSyncService;
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
     private readonly ILogger<AdminModule> _logger;
+    private readonly PermissionService _permissionService;
 
     /// <summary>Initialises the module.</summary>
     public AdminModule(
@@ -35,10 +35,12 @@ public class AdminModule : InteractionModuleBase<SocketInteractionContext>
     /// <summary>Grants a Discord user permission to manage a container.</summary>
     [SlashCommand("grant", "Grant a user permission to manage a container")]
     public async Task GrantAsync(
-        [Summary("user", "The Discord user to grant permission to")] IUser user,
-        [Summary("container", "Friendly name of the container")] string containerName)
+        [Summary("user", "The Discord user to grant permission to")]
+        IUser user,
+        [Summary("container", "Friendly name of the container")]
+        string containerName)
     {
-        await DeferAsync(ephemeral: true);
+        await DeferAsync(true);
 
         if (!await _permissionService.IsAdminAsync(Context.User.Id))
         {
@@ -53,10 +55,12 @@ public class AdminModule : InteractionModuleBase<SocketInteractionContext>
     /// <summary>Revokes a Discord user's permission to manage a container.</summary>
     [SlashCommand("revoke", "Revoke a user's permission for a container")]
     public async Task RevokeAsync(
-        [Summary("user", "The Discord user to revoke permission from")] IUser user,
-        [Summary("container", "Friendly name of the container")] string containerName)
+        [Summary("user", "The Discord user to revoke permission from")]
+        IUser user,
+        [Summary("container", "Friendly name of the container")]
+        string containerName)
     {
-        await DeferAsync(ephemeral: true);
+        await DeferAsync(true);
 
         if (!await _permissionService.IsAdminAsync(Context.User.Id))
         {
@@ -71,12 +75,16 @@ public class AdminModule : InteractionModuleBase<SocketInteractionContext>
     /// <summary>Adds a new container configuration to the database.</summary>
     [SlashCommand("addcontainer", "Add a new Docker container configuration")]
     public async Task AddContainerAsync(
-        [Summary("name", "Friendly name for Discord commands")] string name,
-        [Summary("containerid", "Docker container name or ID")] string containerId,
-        [Summary("game", "Game type (e.g. Minecraft)")] string game,
-        [Summary("description", "Optional description")] string description = "")
+        [Summary("name", "Friendly name for Discord commands")]
+        string name,
+        [Summary("containerid", "Docker container name or ID")]
+        string containerId,
+        [Summary("game", "Game type (e.g. Minecraft)")]
+        string game,
+        [Summary("description", "Optional description")]
+        string description = "")
     {
-        await DeferAsync(ephemeral: true);
+        await DeferAsync(true);
 
         if (!await _permissionService.IsAdminAsync(Context.User.Id))
         {
@@ -107,12 +115,12 @@ public class AdminModule : InteractionModuleBase<SocketInteractionContext>
     }
 
     /// <summary>
-    /// Re-syncs container configurations from <c>appsettings.json</c> into the database.
+    ///     Re-syncs container configurations from <c>appsettings.json</c> into the database.
     /// </summary>
     [SlashCommand("sync", "Sync containers from appsettings.json into the database")]
     public async Task SyncAsync()
     {
-        await DeferAsync(ephemeral: true);
+        await DeferAsync(true);
 
         if (!await _permissionService.IsAdminAsync(Context.User.Id))
         {

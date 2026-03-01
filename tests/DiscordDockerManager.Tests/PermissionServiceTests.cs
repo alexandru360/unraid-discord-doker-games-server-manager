@@ -3,12 +3,11 @@ using DiscordDockerManager.Models;
 using DiscordDockerManager.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
-using Xunit;
 
 namespace DiscordDockerManager.Tests;
 
 /// <summary>
-/// Tests for <see cref="PermissionService"/>.
+///     Tests for <see cref="PermissionService" />.
 /// </summary>
 public class PermissionServiceTests : IAsyncDisposable
 {
@@ -73,7 +72,7 @@ public class PermissionServiceTests : IAsyncDisposable
     public async Task HasPermission_Returns_True_For_Admin()
     {
         await SeedContainerAsync();
-        await SeedAdminUserAsync(111UL);
+        await SeedAdminUserAsync();
 
         var result = await _sut.HasPermissionAsync(111UL, "minecraft");
         Assert.True(result);
@@ -149,11 +148,19 @@ public class PermissionServiceTests : IAsyncDisposable
 }
 
 /// <summary>
-/// Simple in-memory <see cref="IDbContextFactory{TContext}"/> for tests.
+///     Simple in-memory <see cref="IDbContextFactory{TContext}" /> for tests.
 /// </summary>
 file class TestDbContextFactory : IDbContextFactory<AppDbContext>
 {
     private readonly DbContextOptions<AppDbContext> _options;
-    public TestDbContextFactory(DbContextOptions<AppDbContext> options) => _options = options;
-    public AppDbContext CreateDbContext() => new(_options);
+
+    public TestDbContextFactory(DbContextOptions<AppDbContext> options)
+    {
+        _options = options;
+    }
+
+    public AppDbContext CreateDbContext()
+    {
+        return new AppDbContext(_options);
+    }
 }

@@ -1,7 +1,7 @@
 namespace DiscordDockerManager.Models;
 
 /// <summary>
-/// Type of player event detected from container logs.
+///     Type of player event detected from container logs.
 /// </summary>
 public enum PlayerEventType
 {
@@ -16,14 +16,14 @@ public enum PlayerEventType
 }
 
 /// <summary>
-/// A recorded player join or leave event parsed from a container's log stream.
+///     A recorded player join or leave event parsed from a container's log stream.
 /// </summary>
 public class PlayerEvent
 {
     /// <summary>Primary key.</summary>
     public int Id { get; set; }
 
-    /// <summary>Friendly name of the container (matches <see cref="DockerContainerConfig.Name"/>).</summary>
+    /// <summary>Friendly name of the container (matches <see cref="DockerContainerConfig.Name" />).</summary>
     public string ContainerName { get; set; } = string.Empty;
 
     /// <summary>Name of the player as parsed from logs.</summary>

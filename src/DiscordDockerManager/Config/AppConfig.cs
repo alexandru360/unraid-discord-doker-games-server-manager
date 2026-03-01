@@ -1,7 +1,7 @@
 namespace DiscordDockerManager.Config;
 
 /// <summary>
-/// Configuration section for the Discord bot.
+///     Configuration section for the Discord bot.
 /// </summary>
 public class DiscordConfig
 {
@@ -9,35 +9,35 @@ public class DiscordConfig
     public string Token { get; set; } = string.Empty;
 
     /// <summary>
-    /// Optional: Guild (server) ID to register slash commands instantly.
-    /// Set to 0 to register globally (takes up to 1 hour to propagate).
+    ///     Optional: Guild (server) ID to register slash commands instantly.
+    ///     Set to 0 to register globally (takes up to 1 hour to propagate).
     /// </summary>
     public ulong GuildId { get; set; }
 }
 
 /// <summary>
-/// Configuration section for Docker daemon connectivity.
+///     Configuration section for Docker daemon connectivity.
 /// </summary>
 public class DockerConfig
 {
     /// <summary>
-    /// Docker socket or TCP endpoint.
-    /// Default is the Unix socket: <c>unix:///var/run/docker.sock</c>.
+    ///     Docker socket or TCP endpoint.
+    ///     Default is the Unix socket: <c>unix:///var/run/docker.sock</c>.
     /// </summary>
     public string Endpoint { get; set; } = "unix:///var/run/docker.sock";
 }
 
 /// <summary>
-/// Configuration section for the SQLite database.
+///     Configuration section for the SQLite database.
 /// </summary>
 public class DatabaseConfig
 {
     /// <summary>EF Core connection string (e.g. <c>Data Source=gamemanager.db</c>).</summary>
-    public string ConnectionString { get; set; } = "Data Source=/data/gamemanager.db";
+    public string ConnectionString { get; set; } = "Data Source=/data/db/gamemanager.db";
 }
 
 /// <summary>
-/// Configuration section for the Ollama AI integration.
+///     Configuration section for the Ollama AI integration.
 /// </summary>
 public class OllamaConfig
 {
@@ -52,7 +52,7 @@ public class OllamaConfig
 }
 
 /// <summary>
-/// Per-container configuration entry from <c>appsettings.json</c>.
+///     Per-container configuration entry from <c>appsettings.json</c>.
 /// </summary>
 public class ContainerConfigEntry
 {

@@ -1,10 +1,9 @@
 using DiscordDockerManager.Models;
-using Xunit;
 
 namespace DiscordDockerManager.Tests;
 
 /// <summary>
-/// Tests for <see cref="DockerContainerConfig"/> model validation logic.
+///     Tests for <see cref="DockerContainerConfig" /> model validation logic.
 /// </summary>
 public class DockerContainerConfigTests
 {

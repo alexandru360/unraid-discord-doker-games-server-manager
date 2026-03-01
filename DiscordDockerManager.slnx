@@ -1,8 +1,8 @@
 <Solution>
-  <Folder Name="/src/">
-    <Project Path="src/DiscordDockerManager/DiscordDockerManager.csproj" />
-  </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/DiscordDockerManager.Tests/DiscordDockerManager.Tests.csproj" />
-  </Folder>
+    <Folder Name="/src/">
+        <Project Path="src/DiscordDockerManager/DiscordDockerManager.csproj"/>
+    </Folder>
+    <Folder Name="/tests/">
+        <Project Path="tests/DiscordDockerManager.Tests/DiscordDockerManager.Tests.csproj"/>
+    </Folder>
 </Solution>

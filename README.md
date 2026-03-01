@@ -10,10 +10,10 @@ Docker games server manager: a Discord bot that can start/stop game containers a
 - Test: runs unit tests on the build output.
 - Publish: if the push is on `main` and the tests have passed, the image is built from the Dockerfile (without including the test project) and pushed to Docker Hub as `latest` and `sha-<commit>`.
 
-## Cum rulezi imaginea
-1) Creează un fișier `appsettings.Production.json` sau folosește variabile de mediu pentru configurare.
-2) Montează socket-ul Docker și un volum la `/data` pentru baza de date/config.
-3) Pornește containerul folosind tag-ul `latest` (sau `sha-...` pentru o versiune fixă).
+## How to run the image
+1) Create an `appsettings.Production.json` file or use environment variables for configuration.
+2) Mount the Docker socket and a volume at `/data`; on first run the app will create `/data/db`, `/data/logs`, `/data/config` and seed `/data/config/appsettings.json` if missing.
+3) Start the container using the `latest` tag (or `sha-...` for a pinned version).
 
 Quick example:
 ```bash
@@ -21,10 +21,10 @@ docker run -d \
 	--name discord-docker-manager \
 	--restart unless-stopped \
 	-v /var/run/docker.sock:/var/run/docker.sock \
-	-v /opt/discord-docker-manager/data:/data \
+	-v /mnt/user/appdata/diskord-doker-manager:/data \
 	-e Discord__Token="YOUR_DISCORD_TOKEN" \
 	-e Discord__GuildId=123456789012345678 \
-	-e Database__ConnectionString="Data Source=/data/gamemanager.db" \
+	-e Database__ConnectionString="Data Source=/data/db/gamemanager.db" \
 	alex360/unraid-discord-docker-manager:latest
 ```
 
@@ -32,15 +32,20 @@ Useful environment variables (prefixed per .NET options convention):
 - `Discord__Token`: bot token (required).
 - `Discord__GuildId`: optional, for instant slash-command registration.
 - `Docker__Endpoint`: default `unix:///var/run/docker.sock`.
-- `Database__ConnectionString`: default `Data Source=/data/gamemanager.db` (în volumul montat; poți schimba după nevoie).
-- `Ollama__Enabled`, `Ollama__BaseUrl`, `Ollama__Model`: pentru integrarea Ollama (opțional).
+- `Database__ConnectionString`: default `Data Source=/data/db/gamemanager.db` (in the mounted volume; override if you want a different path).
+- `Ollama__Enabled`, `Ollama__BaseUrl`, `Ollama__Model`: for optional Ollama integration.
+- `Serilog:*`: overrides for logging (defaults to console + daily rolling files in `/data/logs`).
+- External config: if you place `/data/config/appsettings.json`, the app reads it and hot-reloads on changes.
 
 ## Installing on Unraid
 - In the Unraid UI, go to Apps → Add Container → New Template.
 - Image: `alex360/unraid-discord-docker-manager:latest`.
 - Volume mappings:
-	- `/var/run/docker.sock` → `/var/run/docker.sock` (read/write) pentru a controla containerele.
-	- `/mnt/user/appdata/discord-docker-manager` → `/data` pentru DB și config.
-- Environment vars: setează cel puțin `Discord__Token`; opțional `Discord__GuildId`, `Docker__Endpoint`, `Database__ConnectionString`, `Ollama__*`.
-- Network: `bridge` e suficient; dacă ai containere pe altă rețea, adaptează după nevoie.
-- Salvează și pornește containerul; verifică log-urile pentru confirmare și pentru eventuale erori de conectare la Discord sau Docker.
+	- `/var/run/docker.sock` → `/var/run/docker.sock` (read/write) to control containers.
+	- `/mnt/user/appdata/diskord-doker-manager` → `/data` for DB, logs, and config (subfolders are created automatically).
+- Environment vars: set at least `Discord__Token`; optionally `Discord__GuildId`, `Docker__Endpoint`, `Database__ConnectionString`, `Ollama__*`.
+- Network: `bridge` is sufficient; adjust if your game containers live on another network.
+- Save and start the container; check the logs for confirmation and any connection issues to Discord or Docker.
+
+Note: logs go to both console and daily rolling files under `/data/logs`. The SQLite database is stored in `/data/db`. Config can be overridden via `/data/config/appsettings.json` and is hot-reloaded when it changes.
+On first start, the container ensures `/data/db`, `/data/logs`, `/data/config` exist, seeds `/data/config/appsettings.json` if absent, writes logs to `/data/logs/log-<date>.log`, and applies EF Core migrations to `/data/db/gamemanager.db`. If a new image ships a higher `ConfigVersion`, the existing `/data/config/appsettings.json` is backed up as `appsettings.json.N.bak` and then replaced with the newer bundled config.

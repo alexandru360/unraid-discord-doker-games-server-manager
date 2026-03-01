@@ -1,12 +1,11 @@
 using DiscordDockerManager.Data;
 using DiscordDockerManager.Models;
 using Microsoft.EntityFrameworkCore;
-using Xunit;
 
 namespace DiscordDockerManager.Tests;
 
 /// <summary>
-/// Tests for <see cref="AppDbContext"/> entity relationships and constraints.
+///     Tests for <see cref="AppDbContext" /> entity relationships and constraints.
 /// </summary>
 public class AppDbContextTests : IAsyncDisposable
 {
@@ -22,7 +21,10 @@ public class AppDbContextTests : IAsyncDisposable
         _db.Database.EnsureCreated();
     }
 
-    public async ValueTask DisposeAsync() => await _db.DisposeAsync();
+    public async ValueTask DisposeAsync()
+    {
+        await _db.DisposeAsync();
+    }
 
     [Fact]
     public async Task Can_Add_And_Retrieve_DockerContainerConfig()
@@ -60,7 +62,7 @@ public class AppDbContextTests : IAsyncDisposable
 
         var loaded = await _db.UserPermissions
             .Include(u => u.ContainerPermissions)
-                .ThenInclude(cp => cp.DockerContainerConfig)
+            .ThenInclude(cp => cp.DockerContainerConfig)
             .FirstAsync(u => u.DiscordUserId == 1234UL);
 
         Assert.Single(loaded.ContainerPermissions);

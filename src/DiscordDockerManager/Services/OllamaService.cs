@@ -1,23 +1,21 @@
+using DiscordDockerManager.Config;
 using DiscordDockerManager.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OllamaSharp;
-using DiscordDockerManager.Config;
+using OllamaSharp.Models;
 
 namespace DiscordDockerManager.Services;
 
 /// <summary>
-/// Optional service that uses an Ollama LLM to parse unusual container log lines
-/// and extract player join/leave events.
+///     Optional service that uses an Ollama LLM to parse unusual container log lines
+///     and extract player join/leave events.
 /// </summary>
 public class OllamaService
 {
     private readonly OllamaConfig _config;
     private readonly ILogger<OllamaService> _logger;
-    private OllamaApiClient? _client;
-
-    /// <summary>Whether the Ollama integration is enabled in configuration.</summary>
-    public bool IsEnabled => _config.Enabled;
+    private readonly OllamaApiClient? _client;
 
     /// <summary>Initialises the service.</summary>
     public OllamaService(IOptions<OllamaConfig> config, ILogger<OllamaService> logger)
@@ -26,7 +24,6 @@ public class OllamaService
         _logger = logger;
 
         if (_config.Enabled)
-        {
             try
             {
                 _client = new OllamaApiClient(new Uri(_config.BaseUrl), _config.Model);
@@ -38,12 +35,14 @@ public class OllamaService
                 _logger.LogWarning(ex, "Failed to initialise Ollama client; AI log parsing will be disabled.");
                 _client = null;
             }
-        }
     }
 
+    /// <summary>Whether the Ollama integration is enabled in configuration.</summary>
+    public bool IsEnabled => _config.Enabled;
+
     /// <summary>
-    /// Asks the LLM to determine whether a log line represents a player join or leave event.
-    /// Returns <c>null</c> if the line is not a player event or Ollama is unavailable.
+    ///     Asks the LLM to determine whether a log line represents a player join or leave event.
+    ///     Returns <c>null</c> if the line is not a player event or Ollama is unavailable.
     /// </summary>
     public async Task<(PlayerEventType EventType, string PlayerName)?> ParseLogLineAsync(
         string logLine, CancellationToken ct = default)
@@ -53,7 +52,7 @@ public class OllamaService
 
         try
         {
-            var request = new OllamaSharp.Models.GenerateRequest
+            var request = new GenerateRequest
             {
                 Model = _config.Model,
                 Prompt =
@@ -72,10 +71,7 @@ public class OllamaService
 
             var response = string.Empty;
 
-            await foreach (var chunk in _client.GenerateAsync(request, ct))
-            {
-                response += chunk?.Response ?? string.Empty;
-            }
+            await foreach (var chunk in _client.GenerateAsync(request, ct)) response += chunk?.Response ?? string.Empty;
 
             response = response.Trim();
             var parts = response.Split('|', 2);

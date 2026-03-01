@@ -1,18 +1,19 @@
+using System.Text;
+using DiscordDockerManager.Config;
 using Docker.DotNet;
 using Docker.DotNet.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using DiscordDockerManager.Config;
 
 namespace DiscordDockerManager.Services;
 
 /// <summary>
-/// Result object returned by Docker operations.
+///     Result object returned by Docker operations.
 /// </summary>
 public record DockerOperationResult(bool Success, string Message);
 
 /// <summary>
-/// Wraps the Docker.DotNet client to provide container management operations.
+///     Wraps the Docker.DotNet client to provide container management operations.
 /// </summary>
 public class DockerService : IDisposable
 {
@@ -39,14 +40,22 @@ public class DockerService : IDisposable
         _client = new DockerClientConfiguration(uri).CreateClient();
     }
 
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        _client.Dispose();
+    }
+
     /// <summary>
-    /// Restarts a container by its name or ID.
+    ///     Restarts a container by its name or ID.
     /// </summary>
-    public async Task<DockerOperationResult> RestartContainerAsync(string containerIdOrName, CancellationToken ct = default)
+    public async Task<DockerOperationResult> RestartContainerAsync(string containerIdOrName,
+        CancellationToken ct = default)
     {
         try
         {
-            await _client.Containers.RestartContainerAsync(containerIdOrName, new ContainerRestartParameters { WaitBeforeKillSeconds = 5 }, ct);
+            await _client.Containers.RestartContainerAsync(containerIdOrName,
+                new ContainerRestartParameters { WaitBeforeKillSeconds = 5 }, ct);
             _logger.LogInformation("Container '{Container}' restarted successfully.", containerIdOrName);
             return new DockerOperationResult(true, $"Container `{containerIdOrName}` restarted successfully.");
         }
@@ -58,9 +67,10 @@ public class DockerService : IDisposable
     }
 
     /// <summary>
-    /// Gets the status of a container.
+    ///     Gets the status of a container.
     /// </summary>
-    public async Task<DockerOperationResult> GetContainerStatusAsync(string containerIdOrName, CancellationToken ct = default)
+    public async Task<DockerOperationResult> GetContainerStatusAsync(string containerIdOrName,
+        CancellationToken ct = default)
     {
         try
         {
@@ -85,9 +95,10 @@ public class DockerService : IDisposable
     }
 
     /// <summary>
-    /// Retrieves the last <paramref name="lines"/> lines from a container's logs.
+    ///     Retrieves the last <paramref name="lines" /> lines from a container's logs.
     /// </summary>
-    public async Task<DockerOperationResult> GetContainerLogsAsync(string containerIdOrName, int lines = 50, CancellationToken ct = default)
+    public async Task<DockerOperationResult> GetContainerLogsAsync(string containerIdOrName, int lines = 50,
+        CancellationToken ct = default)
     {
         try
         {
@@ -99,7 +110,8 @@ public class DockerService : IDisposable
                 Timestamps = true
             };
 
-            using var logStream = await _client.Containers.GetContainerLogsAsync(containerIdOrName, false, parameters, ct);
+            using var logStream =
+                await _client.Containers.GetContainerLogsAsync(containerIdOrName, false, parameters, ct);
             var (stdout, stderr) = await logStream.ReadOutputToEndAsync(ct);
             var combined = (stdout + stderr).Trim();
 
@@ -120,8 +132,8 @@ public class DockerService : IDisposable
     }
 
     /// <summary>
-    /// Opens a log stream for a container, yielding each line to the provided callback.
-    /// Runs until <paramref name="ct"/> is cancelled.
+    ///     Opens a log stream for a container, yielding each line to the provided callback.
+    ///     Runs until <paramref name="ct" /> is cancelled.
     /// </summary>
     public async Task TailLogsAsync(string containerIdOrName, Func<string, Task> onLine, CancellationToken ct)
     {
@@ -136,7 +148,8 @@ public class DockerService : IDisposable
                 Timestamps = false
             };
 
-            using var logStream = await _client.Containers.GetContainerLogsAsync(containerIdOrName, false, parameters, ct);
+            using var logStream =
+                await _client.Containers.GetContainerLogsAsync(containerIdOrName, false, parameters, ct);
 
             var buffer = new byte[4096];
             while (!ct.IsCancellationRequested)
@@ -144,7 +157,7 @@ public class DockerService : IDisposable
                 var result = await logStream.ReadOutputAsync(buffer, 0, buffer.Length, ct);
                 if (result.Count == 0) break;
 
-                var text = System.Text.Encoding.UTF8.GetString(buffer, 0, result.Count).TrimEnd();
+                var text = Encoding.UTF8.GetString(buffer, 0, result.Count).TrimEnd();
                 foreach (var line in text.Split('\n', StringSplitOptions.RemoveEmptyEntries))
                     await onLine(line);
             }
@@ -158,7 +171,4 @@ public class DockerService : IDisposable
             _logger.LogError(ex, "Error tailing logs for container '{Container}'.", containerIdOrName);
         }
     }
-
-    /// <inheritdoc/>
-    public void Dispose() => _client.Dispose();
 }

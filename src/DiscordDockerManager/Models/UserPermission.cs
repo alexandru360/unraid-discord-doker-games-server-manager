@@ -1,7 +1,7 @@
 namespace DiscordDockerManager.Models;
 
 /// <summary>
-/// Represents a Discord user with permissions to manage Docker containers.
+///     Represents a Discord user with permissions to manage Docker containers.
 /// </summary>
 public class UserPermission
 {

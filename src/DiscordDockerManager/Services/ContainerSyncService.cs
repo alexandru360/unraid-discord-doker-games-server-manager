@@ -8,14 +8,14 @@ using Microsoft.Extensions.Options;
 namespace DiscordDockerManager.Services;
 
 /// <summary>
-/// Synchronises container configurations from <c>appsettings.json</c> into the database
-/// so that the database is the single source of truth at runtime.
+///     Synchronises container configurations from <c>appsettings.json</c> into the database
+///     so that the database is the single source of truth at runtime.
 /// </summary>
 public class ContainerSyncService
 {
+    private readonly List<ContainerConfigEntry> _containerEntries;
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
     private readonly ILogger<ContainerSyncService> _logger;
-    private readonly List<ContainerConfigEntry> _containerEntries;
 
     /// <summary>Initialises a new instance.</summary>
     public ContainerSyncService(
@@ -29,8 +29,8 @@ public class ContainerSyncService
     }
 
     /// <summary>
-    /// Inserts or updates container records from configuration.
-    /// Existing entries are updated; entries not in config are left unchanged.
+    ///     Inserts or updates container records from configuration.
+    ///     Existing entries are updated; entries not in config are left unchanged.
     /// </summary>
     public async Task SyncAsync(CancellationToken ct = default)
     {

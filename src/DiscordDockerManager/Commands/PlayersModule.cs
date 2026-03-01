@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 namespace DiscordDockerManager.Commands;
 
 /// <summary>
-/// Discord slash commands for player event history (<c>/players</c>).
+///     Discord slash commands for player event history (<c>/players</c>).
 /// </summary>
 [Group("players", "View player activity on game servers")]
 public class PlayersModule : InteractionModuleBase<SocketInteractionContext>
@@ -26,8 +26,10 @@ public class PlayersModule : InteractionModuleBase<SocketInteractionContext>
     /// <summary>Shows recent player join/leave events for a container.</summary>
     [SlashCommand("list", "Show recent player events for a game server")]
     public async Task ListAsync(
-        [Summary("container", "Friendly name of the container")] string containerName,
-        [Summary("count", "How many recent events to show (default: 20)")] int count = 20)
+        [Summary("container", "Friendly name of the container")]
+        string containerName,
+        [Summary("count", "How many recent events to show (default: 20)")]
+        int count = 20)
     {
         await DeferAsync();
         count = Math.Clamp(count, 1, 50);
@@ -57,7 +59,7 @@ public class PlayersModule : InteractionModuleBase<SocketInteractionContext>
             embed.AddField(
                 $"{icon} {ev.PlayerName}",
                 $"`{ev.EventType}` at {ev.Timestamp:yyyy-MM-dd HH:mm:ss} UTC",
-                inline: false);
+                false);
         }
 
         await FollowupAsync(embed: embed.Build());

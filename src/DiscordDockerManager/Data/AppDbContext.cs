@@ -4,12 +4,14 @@ using Microsoft.EntityFrameworkCore;
 namespace DiscordDockerManager.Data;
 
 /// <summary>
-/// Entity Framework Core database context for the Discord Docker Manager application.
+///     Entity Framework Core database context for the Discord Docker Manager application.
 /// </summary>
 public class AppDbContext : DbContext
 {
     /// <summary>Initialises a new instance with the given options.</summary>
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+    {
+    }
 
     /// <summary>Discord user permission records.</summary>
     public DbSet<UserPermission> UserPermissions { get; set; } = null!;
@@ -23,7 +25,7 @@ public class AppDbContext : DbContext
     /// <summary>Player join/leave events parsed from logs.</summary>
     public DbSet<PlayerEvent> PlayerEvents { get; set; } = null!;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -54,14 +56,14 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => new { e.UserPermissionId, e.DockerContainerConfigId }).IsUnique();
 
             entity.HasOne(e => e.UserPermission)
-                  .WithMany(u => u.ContainerPermissions)
-                  .HasForeignKey(e => e.UserPermissionId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                .WithMany(u => u.ContainerPermissions)
+                .HasForeignKey(e => e.UserPermissionId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(e => e.DockerContainerConfig)
-                  .WithMany(c => c.UserPermissions)
-                  .HasForeignKey(e => e.DockerContainerConfigId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                .WithMany(c => c.UserPermissions)
+                .HasForeignKey(e => e.DockerContainerConfigId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // PlayerEvent
@@ -75,9 +77,9 @@ public class AppDbContext : DbContext
             entity.Property(e => e.EventType).HasConversion<string>();
 
             entity.HasOne(e => e.DockerContainerConfig)
-                  .WithMany(c => c.PlayerEvents)
-                  .HasForeignKey(e => e.DockerContainerConfigId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                .WithMany(c => c.PlayerEvents)
+                .HasForeignKey(e => e.DockerContainerConfigId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

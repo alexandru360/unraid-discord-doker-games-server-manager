@@ -1,12 +1,11 @@
 using System.Text.RegularExpressions;
 using DiscordDockerManager.Models;
 using DiscordDockerManager.Services;
-using Xunit;
 
 namespace DiscordDockerManager.Tests;
 
 /// <summary>
-/// Tests for player event log line parsing in <see cref="LogMonitorService"/>.
+///     Tests for player event log line parsing in <see cref="LogMonitorService" />.
 /// </summary>
 public class PlayerEventParsingTests
 {
@@ -59,7 +58,8 @@ public class PlayerEventParsingTests
     [Fact]
     public void Returns_Unknown_For_Empty_Line()
     {
-        var (eventType, playerName) = LogMonitorService.ParseLine(string.Empty, MinecraftJoinRegex, MinecraftLeaveRegex);
+        var (eventType, playerName) =
+            LogMonitorService.ParseLine(string.Empty, MinecraftJoinRegex, MinecraftLeaveRegex);
         Assert.Equal(PlayerEventType.Unknown, eventType);
         Assert.Equal(string.Empty, playerName);
     }

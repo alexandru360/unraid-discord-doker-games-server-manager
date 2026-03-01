@@ -8,15 +8,15 @@ using Microsoft.Extensions.Logging;
 namespace DiscordDockerManager.Services;
 
 /// <summary>
-/// Background service that tails Docker container logs and records
-/// player join/leave events into the database.
+///     Background service that tails Docker container logs and records
+///     player join/leave events into the database.
 /// </summary>
 public class LogMonitorService : BackgroundService
 {
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
     private readonly DockerService _dockerService;
-    private readonly OllamaService _ollamaService;
     private readonly ILogger<LogMonitorService> _logger;
+    private readonly OllamaService _ollamaService;
 
     /// <summary>Initialises the log monitor with required dependencies.</summary>
     public LogMonitorService(
@@ -31,7 +31,7 @@ public class LogMonitorService : BackgroundService
         _logger = logger;
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("LogMonitorService starting.");
@@ -73,9 +73,11 @@ public class LogMonitorService : BackgroundService
         _logger.LogDebug("Starting log tail for container '{Container}'.", config.Name);
 
         var joinRegex = string.IsNullOrWhiteSpace(config.PlayerJoinPattern)
-            ? null : new Regex(config.PlayerJoinPattern, RegexOptions.Compiled);
+            ? null
+            : new Regex(config.PlayerJoinPattern, RegexOptions.Compiled);
         var leaveRegex = string.IsNullOrWhiteSpace(config.PlayerLeavePattern)
-            ? null : new Regex(config.PlayerLeavePattern, RegexOptions.Compiled);
+            ? null
+            : new Regex(config.PlayerLeavePattern, RegexOptions.Compiled);
 
         await _dockerService.TailLogsAsync(config.ContainerId, async line =>
         {
@@ -105,7 +107,8 @@ public class LogMonitorService : BackgroundService
                     DockerContainerConfigId = config.Id
                 });
                 await db.SaveChangesAsync(ct);
-                _logger.LogDebug("Player {PlayerName} {EventType} on '{Container}'.", playerName, eventType, config.Name);
+                _logger.LogDebug("Player {PlayerName} {EventType} on '{Container}'.", playerName, eventType,
+                    config.Name);
             }
             catch (Exception ex)
             {
@@ -115,8 +118,8 @@ public class LogMonitorService : BackgroundService
     }
 
     /// <summary>
-    /// Attempts to match a log line against the join/leave regexes.
-    /// Returns (<see cref="PlayerEventType.Unknown"/>, "") if no match.
+    ///     Attempts to match a log line against the join/leave regexes.
+    ///     Returns (<see cref="PlayerEventType.Unknown" />, "") if no match.
     /// </summary>
     public static (PlayerEventType EventType, string PlayerName) ParseLine(
         string line, Regex? joinRegex, Regex? leaveRegex)

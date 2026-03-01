@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 namespace DiscordDockerManager.Services;
 
 /// <summary>
-/// Handles checking, granting, and revoking user permissions for Docker containers.
+///     Handles checking, granting, and revoking user permissions for Docker containers.
 /// </summary>
 public class PermissionService
 {
@@ -21,8 +21,8 @@ public class PermissionService
     }
 
     /// <summary>
-    /// Returns <c>true</c> if the user has admin rights or is explicitly permitted to manage
-    /// the specified container.
+    ///     Returns <c>true</c> if the user has admin rights or is explicitly permitted to manage
+    ///     the specified container.
     /// </summary>
     public async Task<bool> HasPermissionAsync(ulong discordUserId, string containerName)
     {
@@ -30,7 +30,7 @@ public class PermissionService
 
         var user = await db.UserPermissions
             .Include(u => u.ContainerPermissions)
-                .ThenInclude(cp => cp.DockerContainerConfig)
+            .ThenInclude(cp => cp.DockerContainerConfig)
             .FirstOrDefaultAsync(u => u.DiscordUserId == discordUserId);
 
         if (user is null) return false;
@@ -49,10 +49,11 @@ public class PermissionService
     }
 
     /// <summary>
-    /// Grants <paramref name="targetDiscordUserId"/> permission to manage <paramref name="containerName"/>.
-    /// Creates the user record if it does not exist.
+    ///     Grants <paramref name="targetDiscordUserId" /> permission to manage <paramref name="containerName" />.
+    ///     Creates the user record if it does not exist.
     /// </summary>
-    public async Task<string> GrantPermissionAsync(ulong targetDiscordUserId, string targetUsername, string containerName)
+    public async Task<string> GrantPermissionAsync(ulong targetDiscordUserId, string targetUsername,
+        string containerName)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
 
@@ -82,7 +83,7 @@ public class PermissionService
             user.Username = targetUsername;
         }
 
-        bool alreadyGranted = await db.UserPermissionContainers.AnyAsync(upc =>
+        var alreadyGranted = await db.UserPermissionContainers.AnyAsync(upc =>
             upc.UserPermissionId == user.Id && upc.DockerContainerConfigId == container.Id);
 
         if (alreadyGranted)
@@ -95,11 +96,12 @@ public class PermissionService
         });
 
         await db.SaveChangesAsync();
-        _logger.LogInformation("Granted {Username} permission for container '{Container}'.", targetUsername, containerName);
+        _logger.LogInformation("Granted {Username} permission for container '{Container}'.", targetUsername,
+            containerName);
         return $"Granted **{targetUsername}** permission to manage `{containerName}`.";
     }
 
-    /// <summary>Revokes <paramref name="targetDiscordUserId"/>'s permission for <paramref name="containerName"/>.</summary>
+    /// <summary>Revokes <paramref name="targetDiscordUserId" />'s permission for <paramref name="containerName" />.</summary>
     public async Task<string> RevokePermissionAsync(ulong targetDiscordUserId, string containerName)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
@@ -121,7 +123,8 @@ public class PermissionService
         db.UserPermissionContainers.Remove(link);
         await db.SaveChangesAsync();
 
-        _logger.LogInformation("Revoked {Username}'s permission for container '{Container}'.", user.Username, containerName);
+        _logger.LogInformation("Revoked {Username}'s permission for container '{Container}'.", user.Username,
+            containerName);
         return $"Revoked **{user.Username}**'s permission for `{containerName}`.";
     }
 

@@ -1,7 +1,6 @@
 using Discord;
 using Discord.Interactions;
 using DiscordDockerManager.Data;
-using DiscordDockerManager.Models;
 using DiscordDockerManager.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -9,15 +8,15 @@ using Microsoft.Extensions.Logging;
 namespace DiscordDockerManager.Commands;
 
 /// <summary>
-/// Discord slash commands for Docker container management (<c>/docker</c>).
+///     Discord slash commands for Docker container management (<c>/docker</c>).
 /// </summary>
 [Group("docker", "Manage Docker game server containers")]
 public class DockerModule : InteractionModuleBase<SocketInteractionContext>
 {
-    private readonly DockerService _dockerService;
-    private readonly PermissionService _permissionService;
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
+    private readonly DockerService _dockerService;
     private readonly ILogger<DockerModule> _logger;
+    private readonly PermissionService _permissionService;
 
     /// <summary>Initialises the module with injected services.</summary>
     public DockerModule(
@@ -35,7 +34,8 @@ public class DockerModule : InteractionModuleBase<SocketInteractionContext>
     /// <summary>Restarts a configured Docker container.</summary>
     [SlashCommand("restart", "Restart a Docker container")]
     public async Task RestartAsync(
-        [Summary("container", "Friendly name of the container")] string containerName)
+        [Summary("container", "Friendly name of the container")]
+        string containerName)
     {
         await DeferAsync();
 
@@ -55,7 +55,8 @@ public class DockerModule : InteractionModuleBase<SocketInteractionContext>
             return;
         }
 
-        _logger.LogInformation("User {User} is restarting container '{Container}'.", Context.User.Username, containerName);
+        _logger.LogInformation("User {User} is restarting container '{Container}'.", Context.User.Username,
+            containerName);
         var result = await _dockerService.RestartContainerAsync(config.ContainerId);
 
         var icon = result.Success ? "✅" : "❌";
@@ -65,7 +66,8 @@ public class DockerModule : InteractionModuleBase<SocketInteractionContext>
     /// <summary>Shows the current status of a configured container.</summary>
     [SlashCommand("status", "Show status of a Docker container")]
     public async Task StatusAsync(
-        [Summary("container", "Friendly name of the container")] string containerName)
+        [Summary("container", "Friendly name of the container")]
+        string containerName)
     {
         await DeferAsync();
 
@@ -110,12 +112,10 @@ public class DockerModule : InteractionModuleBase<SocketInteractionContext>
             .WithCurrentTimestamp();
 
         foreach (var c in containers)
-        {
             embed.AddField(
                 $"{c.Name} ({c.Game})",
                 $"Container ID: `{c.ContainerId}`\n{c.Description}",
-                inline: false);
-        }
+                false);
 
         await FollowupAsync(embed: embed.Build());
     }
@@ -123,8 +123,10 @@ public class DockerModule : InteractionModuleBase<SocketInteractionContext>
     /// <summary>Shows the last N log lines from a container.</summary>
     [SlashCommand("logs", "Show recent log lines from a Docker container")]
     public async Task LogsAsync(
-        [Summary("container", "Friendly name of the container")] string containerName,
-        [Summary("lines", "Number of lines to show (default: 30)")] int lines = 30)
+        [Summary("container", "Friendly name of the container")]
+        string containerName,
+        [Summary("lines", "Number of lines to show (default: 30)")]
+        int lines = 30)
     {
         await DeferAsync();
 
