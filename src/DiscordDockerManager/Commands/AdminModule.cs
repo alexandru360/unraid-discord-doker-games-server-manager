@@ -40,7 +40,8 @@ public class AdminModule : InteractionModuleBase<SocketInteractionContext>
         [Summary("container", "Friendly name of the container")]
         string containerName)
     {
-        await DeferAsync(true);
+        if (!Context.Interaction.HasResponded)
+            await DeferAsync(true);
 
         if (!await _permissionService.IsAdminAsync(Context.User.Id))
         {
@@ -60,7 +61,8 @@ public class AdminModule : InteractionModuleBase<SocketInteractionContext>
         [Summary("container", "Friendly name of the container")]
         string containerName)
     {
-        await DeferAsync(true);
+        if (!Context.Interaction.HasResponded)
+            await DeferAsync(true);
 
         if (!await _permissionService.IsAdminAsync(Context.User.Id))
         {
@@ -84,7 +86,8 @@ public class AdminModule : InteractionModuleBase<SocketInteractionContext>
         [Summary("description", "Optional description")]
         string description = "")
     {
-        await DeferAsync(true);
+        if (!Context.Interaction.HasResponded)
+            await DeferAsync(true);
 
         if (!await _permissionService.IsAdminAsync(Context.User.Id))
         {
@@ -120,7 +123,8 @@ public class AdminModule : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("sync", "Sync containers from appsettings.json into the database")]
     public async Task SyncAsync()
     {
-        await DeferAsync(true);
+        if (!Context.Interaction.HasResponded)
+            await DeferAsync(true);
 
         if (!await _permissionService.IsAdminAsync(Context.User.Id))
         {

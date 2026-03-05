@@ -31,7 +31,8 @@ public class PlayersModule : InteractionModuleBase<SocketInteractionContext>
         [Summary("count", "How many recent events to show (default: 20)")]
         int count = 20)
     {
-        await DeferAsync();
+        if (!Context.Interaction.HasResponded)
+            await DeferAsync();
         count = Math.Clamp(count, 1, 50);
 
         await using var db = await _dbFactory.CreateDbContextAsync();

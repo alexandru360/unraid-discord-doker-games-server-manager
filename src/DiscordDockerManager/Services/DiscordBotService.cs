@@ -91,17 +91,22 @@ public class DiscordBotService : BackgroundService
         await PostStartupStatusAsync();
     }
 
-    private async Task OnInteractionAsync(SocketInteraction interaction)
+    private Task OnInteractionAsync(SocketInteraction interaction)
     {
-        try
+        _ = Task.Run(async () =>
         {
-            var ctx = new SocketInteractionContext(_client, interaction);
-            await _interactions.ExecuteCommandAsync(ctx, _serviceProvider);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Unhandled exception while executing interaction.");
-        }
+            try
+            {
+                var ctx = new SocketInteractionContext(_client, interaction);
+                await _interactions.ExecuteCommandAsync(ctx, _serviceProvider);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception while executing interaction.");
+            }
+        });
+
+        return Task.CompletedTask;
     }
 
     private async Task OnMessageReceivedAsync(SocketMessage message)

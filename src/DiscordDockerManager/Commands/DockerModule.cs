@@ -37,7 +37,8 @@ public class DockerModule : InteractionModuleBase<SocketInteractionContext>
         [Summary("container", "Friendly name of the container")]
         string containerName)
     {
-        await DeferAsync();
+        if (!Context.Interaction.HasResponded)
+            await DeferAsync();
 
         if (!await _permissionService.HasPermissionAsync(Context.User.Id, containerName))
         {
@@ -69,7 +70,8 @@ public class DockerModule : InteractionModuleBase<SocketInteractionContext>
         [Summary("container", "Friendly name of the container")]
         string containerName)
     {
-        await DeferAsync();
+        if (!Context.Interaction.HasResponded)
+            await DeferAsync();
 
         if (!await _permissionService.HasPermissionAsync(Context.User.Id, containerName))
         {
@@ -129,7 +131,8 @@ public class DockerModule : InteractionModuleBase<SocketInteractionContext>
         [Summary("lines", "Number of lines to show (default: 30)")]
         int lines = 30)
     {
-        await DeferAsync();
+        if (!Context.Interaction.HasResponded)
+            await DeferAsync();
 
         if (!await _permissionService.HasPermissionAsync(Context.User.Id, containerName))
         {
