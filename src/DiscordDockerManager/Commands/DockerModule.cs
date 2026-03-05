@@ -1,3 +1,4 @@
+using System.Text;
 using Discord;
 using Discord.Interactions;
 using DiscordDockerManager.Data;
@@ -8,9 +9,9 @@ using Microsoft.Extensions.Logging;
 namespace DiscordDockerManager.Commands;
 
 /// <summary>
-///     Discord slash commands for Docker container management (<c>/docker</c>).
+///     Discord slash commands for Docker container management (<c>/hbot</c>).
 /// </summary>
-[Group("docker", "Manage Docker game server containers")]
+[Group("hbot", "Manage Docker game server containers")]
 public class DockerModule : InteractionModuleBase<SocketInteractionContext>
 {
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
@@ -88,17 +89,20 @@ public class DockerModule : InteractionModuleBase<SocketInteractionContext>
             return;
         }
 
-        var result = await _dockerService.GetContainerStatusAsync(config.ContainerId);
-        var icon = result.Success ? "ℹ️" : "❌";
-        await FollowupAsync($"{icon} {result.Message}");
+        var statusLookup = await _dockerService.GetContainerStatusesAsync(new[] { config.ContainerId });
+        var isRunning = statusLookup.TryGetValue(config.ContainerId, out var status)
+                        && status.Found
+                        && status.State.Equals("running", StringComparison.OrdinalIgnoreCase);
+
+        await FollowupAsync(BuildContainerTable(new[] { (config.Name, config.ContainerId, isRunning) }));
     }
 
     /// <summary>Lists all enabled configured containers.</summary>
     [SlashCommand("list", "List all configured Docker containers")]
     public async Task ListAsync()
     {
-        // Acknowledge quickly to keep the interaction token valid.
-        await RespondAsync("Listing containers...", ephemeral: true);
+        if (!Context.Interaction.HasResponded)
+            await DeferAsync();
 
         await using var db = await _dbFactory.CreateDbContextAsync();
         var containers = await db.DockerContainerConfigs.Where(c => c.IsEnabled).ToListAsync();
@@ -109,18 +113,37 @@ public class DockerModule : InteractionModuleBase<SocketInteractionContext>
             return;
         }
 
-        var embed = new EmbedBuilder()
-            .WithTitle("🐳 Configured Docker Containers")
-            .WithColor(Color.Blue)
-            .WithCurrentTimestamp();
+        var statusLookup = await _dockerService.GetContainerStatusesAsync(containers.Select(c => c.ContainerId));
 
-        foreach (var c in containers)
-            embed.AddField(
-                $"{c.Name} ({c.Game})",
-                $"Container ID: `{c.ContainerId}`\n{c.Description}",
-                false);
+        var rows = containers
+            .Select(c =>
+            {
+                var isRunning = statusLookup.TryGetValue(c.ContainerId, out var status)
+                                && status.Found
+                                && status.State.Equals("running", StringComparison.OrdinalIgnoreCase);
+                return (c.Name, c.ContainerId, isRunning);
+            })
+            .ToList();
 
-        await FollowupAsync(embed: embed.Build());
+        await FollowupAsync(BuildContainerTable(rows));
+    }
+
+    private static string BuildContainerTable(IEnumerable<(string Name, string ContainerId, bool IsRunning)> rows)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("```text");
+        sb.AppendLine("ST  | DOCKER");
+        sb.AppendLine("----+--------------------------------");
+
+        foreach (var row in rows)
+        {
+            var dot = row.IsRunning ? "🟢" : "🔴";
+            sb.AppendLine($"{dot} | {row.Name}");
+            sb.AppendLine($"   | {row.ContainerId}");
+        }
+
+        sb.Append("```");
+        return sb.ToString();
     }
 
     /// <summary>Shows the last N log lines from a container.</summary>

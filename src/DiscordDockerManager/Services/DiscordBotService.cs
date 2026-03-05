@@ -232,7 +232,7 @@ public class DiscordBotService : BackgroundService
                   $"- `{prefix} restart <container>` — restart container\n" +
                   $"- `{prefix} logs <container> [lines]` — recent logs (default 30)\n" +
                   $"- `{prefix} help` — this help\n" +
-                  "Slash commands: /docker list | status | restart | logs; /players list; /admin ... (admins only).";
+                  "Slash commands: /hbot list | status | restart | logs; /players list; /admin ... (admins only).";
         await channel.SendMessageAsync(msg);
     }
 
