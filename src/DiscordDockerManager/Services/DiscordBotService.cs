@@ -21,6 +21,7 @@ public class DiscordBotService : BackgroundService
 {
     private readonly DiscordSocketClient _client;
     private readonly AppDiscordConfig _config;
+    private readonly ExternalIpService _externalIpService;
     private readonly InteractionService _interactions;
     private readonly ILogger<DiscordBotService> _logger;
     private readonly IServiceProvider _serviceProvider;
@@ -33,7 +34,8 @@ public class DiscordBotService : BackgroundService
         IServiceProvider serviceProvider,
         IOptions<AppDiscordConfig> config,
         ILogger<DiscordBotService> logger,
-        IServiceScopeFactory scopeFactory)
+        IServiceScopeFactory scopeFactory,
+        ExternalIpService externalIpService)
     {
         _client = client;
         _interactions = interactions;
@@ -41,6 +43,7 @@ public class DiscordBotService : BackgroundService
         _config = config.Value;
         _logger = logger;
         _scopeFactory = scopeFactory;
+        _externalIpService = externalIpService;
     }
 
     /// <inheritdoc />
@@ -202,9 +205,15 @@ public class DiscordBotService : BackgroundService
             ? string.Join(", ", running)
             : "none";
 
+        var externalIp = await _externalIpService.GetExternalIpAsync();
+        var ipLine = externalIp != null
+            ? $"\n🌐 Server external IP: `{externalIp}`"
+            : string.Empty;
+
         var content = ":wave: Hubdex online.\n"
                   + $"Prefix: `{prefix}` | Slash commands ready.\n"
-                  + $"Running now: {runningText}. Try `{prefix} list`.";
+                  + $"Running now: {runningText}. Try `{prefix} list`."
+                  + ipLine;
 
         await channel.SendMessageAsync(content, embed: embed);
         _logger.LogInformation("Posted startup status to channel {ChannelId}.", _config.HelpChannelId);

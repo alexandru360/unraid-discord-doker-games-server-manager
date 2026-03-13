@@ -89,8 +89,15 @@ var host = Host.CreateDefaultBuilder(args)
             sp.GetRequiredService<DiscordSocketClient>(),
             new InteractionServiceConfig { DefaultRunMode = RunMode.Async }));
 
+        // --- HTTP clients ---
+        services.AddHttpClient(ExternalIpService.HttpClientName, client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(10);
+        });
+
         // --- Application Services ---
         services.AddSingleton<DockerService>();
+        services.AddSingleton<ExternalIpService>();
         services.AddScoped<PermissionService>();
         services.AddScoped<ContainerSyncService>();
         services.AddSingleton<OllamaService>();
