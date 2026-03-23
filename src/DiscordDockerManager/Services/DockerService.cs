@@ -47,6 +47,36 @@ public class DockerService : IDisposable
     }
 
     /// <summary>
+    ///     Returns the Docker container name of the bot itself (if running inside Docker),
+    ///     so it can be excluded from listings. Returns <c>null</c> when not detected.
+    /// </summary>
+    public async Task<string?> GetSelfContainerNameAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            var hostname = Environment.MachineName;
+            var containers = await _client.Containers.ListContainersAsync(
+                new ContainersListParameters { All = true }, ct);
+
+            var self = containers.FirstOrDefault(c =>
+                c.ID.StartsWith(hostname, StringComparison.OrdinalIgnoreCase));
+
+            if (self is not null)
+            {
+                var name = self.Names.FirstOrDefault()?.TrimStart('/');
+                _logger.LogInformation("Detected bot's own container: '{Name}' (ID: {Id}).", name, self.ID[..12]);
+                return name;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not detect bot's own container.");
+        }
+
+        return null;
+    }
+
+    /// <summary>
     ///     Restarts a container by its name or ID.
     /// </summary>
     public async Task<DockerOperationResult> RestartContainerAsync(string containerIdOrName,

@@ -105,7 +105,13 @@ public class DockerModule : InteractionModuleBase<SocketInteractionContext>
             await DeferAsync();
 
         await using var db = await _dbFactory.CreateDbContextAsync();
-        var containers = await db.DockerContainerConfigs.Where(c => c.IsEnabled).ToListAsync();
+        var selfContainerName = await _dockerService.GetSelfContainerNameAsync();
+        var allContainers = await db.DockerContainerConfigs.Where(c => c.IsEnabled).ToListAsync();
+        var containers = selfContainerName is not null
+            ? allContainers.Where(c =>
+                !string.Equals(c.ContainerId, selfContainerName, StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(c.Name, selfContainerName, StringComparison.OrdinalIgnoreCase)).ToList()
+            : allContainers;
 
         if (containers.Count == 0)
         {

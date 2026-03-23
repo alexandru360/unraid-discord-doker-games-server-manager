@@ -243,10 +243,17 @@ public class DiscordBotService : BackgroundService
         var dockerService = scope.ServiceProvider.GetRequiredService<DockerService>();
 
         await using var db = await dbFactory.CreateDbContextAsync();
-        var containers = await db.DockerContainerConfigs
+        var selfContainerName = await dockerService.GetSelfContainerNameAsync();
+        var allContainers = await db.DockerContainerConfigs
             .Where(c => c.IsEnabled)
             .OrderBy(c => c.Name)
             .ToListAsync();
+        // Exclude the bot's own container
+        var containers = selfContainerName is not null
+            ? allContainers.Where(c =>
+                !string.Equals(c.ContainerId, selfContainerName, StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(c.Name, selfContainerName, StringComparison.OrdinalIgnoreCase)).ToList()
+            : allContainers;
 
         if (containers.Count == 0)
         {

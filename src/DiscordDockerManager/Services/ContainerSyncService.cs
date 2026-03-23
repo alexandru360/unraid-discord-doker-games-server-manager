@@ -16,6 +16,7 @@ public class ContainerSyncService
     private readonly List<ContainerConfigEntry> _containerEntries;
     private readonly string _managedContainersCsv;
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
+    private readonly DockerService _dockerService;
     private readonly ILogger<ContainerSyncService> _logger;
 
     /// <summary>Initialises a new instance.</summary>
@@ -23,10 +24,12 @@ public class ContainerSyncService
         IDbContextFactory<AppDbContext> dbFactory,
         IOptions<List<ContainerConfigEntry>> containerEntries,
         IOptions<DockerConfig> dockerConfig,
+        DockerService dockerService,
         ILogger<ContainerSyncService> logger)
     {
         _dbFactory = dbFactory;
         _logger = logger;
+        _dockerService = dockerService;
         _containerEntries = containerEntries.Value;
         _managedContainersCsv = dockerConfig.Value.ManagedContainers;
     }
@@ -38,7 +41,7 @@ public class ContainerSyncService
     public async Task SyncAsync(CancellationToken ct = default)
     {
         var allEntries = new List<ContainerConfigEntry>(_containerEntries);
-        AppendManagedContainersFromCsv(allEntries);
+        await AppendManagedContainersFromCsvAsync(allEntries, ct);
 
         if (allEntries.Count == 0)
         {
@@ -103,7 +106,7 @@ public class ContainerSyncService
         await db.SaveChangesAsync(ct);
     }
 
-    private void AppendManagedContainersFromCsv(List<ContainerConfigEntry> entries)
+    private async Task AppendManagedContainersFromCsvAsync(List<ContainerConfigEntry> entries, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(_managedContainersCsv)) return;
 
@@ -112,12 +115,31 @@ public class ContainerSyncService
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
 
+        // Detect the bot's own container name so it can be excluded.
+        var selfContainerName = await _dockerService.GetSelfContainerNameAsync(ct);
+
         foreach (var token in tokens)
         {
+            // Skip the bot's own container
+            if (selfContainerName is not null && string.Equals(token, selfContainerName, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogInformation("Skipping CSV container '{Token}' — it is the bot's own container.", token);
+                continue;
+            }
+
             var existing = entries.FirstOrDefault(e =>
                 string.Equals(e.Name, token, StringComparison.OrdinalIgnoreCase));
             if (existing is not null)
             {
+                continue;
+            }
+
+            // Skip if another entry already manages the same Docker container
+            var existingByContainerId = entries.FirstOrDefault(e =>
+                string.Equals(e.ContainerId, token, StringComparison.OrdinalIgnoreCase));
+            if (existingByContainerId is not null)
+            {
+                _logger.LogInformation("Skipping CSV container '{Token}' — already configured as '{Name}'.", token, existingByContainerId.Name);
                 continue;
             }
 
