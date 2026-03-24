@@ -19,7 +19,6 @@
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
         <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.1" />
-        <PackageReference Include="OllamaSharp" Version="4.0.8" />
         <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
         <PackageReference Include="Serilog.Expressions" Version="3.4.0" />
         <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.0" />

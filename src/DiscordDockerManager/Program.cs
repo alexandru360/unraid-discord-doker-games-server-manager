@@ -1,6 +1,5 @@
 using System.Text.RegularExpressions;
 using Discord;
-using Discord.Interactions;
 using Discord.WebSocket;
 using DiscordDockerManager.Config;
 using DiscordDockerManager.Data;
@@ -69,7 +68,6 @@ var host = Host.CreateDefaultBuilder(args)
         services.Configure<DiscordConfig>(config.GetSection("Discord"));
         services.Configure<DockerConfig>(config.GetSection("Docker"));
         services.Configure<DatabaseConfig>(config.GetSection("Database"));
-        services.Configure<OllamaConfig>(config.GetSection("Ollama"));
         services.Configure<List<ContainerConfigEntry>>(config.GetSection("Containers"));
 
         // --- Database ---
@@ -81,13 +79,10 @@ var host = Host.CreateDefaultBuilder(args)
         // --- Discord.Net ---
         var socketConfig = new DiscordSocketConfig
         {
-            GatewayIntents = GatewayIntents.Guilds | GatewayIntents.GuildMessages
+            GatewayIntents = GatewayIntents.Guilds
         };
         services.AddSingleton(socketConfig);
         services.AddSingleton<DiscordSocketClient>();
-        services.AddSingleton(sp => new InteractionService(
-            sp.GetRequiredService<DiscordSocketClient>(),
-            new InteractionServiceConfig { DefaultRunMode = RunMode.Async }));
 
         // --- HTTP clients ---
         services.AddHttpClient(ExternalIpService.HttpClientName, client =>
@@ -98,13 +93,10 @@ var host = Host.CreateDefaultBuilder(args)
         // --- Application Services ---
         services.AddSingleton<DockerService>();
         services.AddSingleton<ExternalIpService>();
-        services.AddScoped<PermissionService>();
         services.AddScoped<ContainerSyncService>();
-        services.AddSingleton<OllamaService>();
 
         // --- Hosted Services ---
         services.AddHostedService<DiscordBotService>();
-        services.AddHostedService<LogMonitorService>();
     })
     .ConfigureLogging(logging => { logging.ClearProviders(); })
     .Build();
