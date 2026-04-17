@@ -136,13 +136,10 @@ public class DiscordBotService : BackgroundService
         }
 
         var statusLookup = await dockerService.GetContainerStatusesAsync(containers.Select(c => c.ContainerId));
+        var externalIp = await _externalIpService.GetExternalIpAsync();
 
-        var embed = new EmbedBuilder()
-            .WithTitle("🐳 Docker Container Status")
-            .WithColor(Color.Blue)
-            .WithCurrentTimestamp();
-
-        var runningNames = new List<string>();
+        var runningLines = new List<string>();
+        var offlineLines = new List<string>();
 
         foreach (var c in containers)
         {
@@ -150,30 +147,58 @@ public class DiscordBotService : BackgroundService
                 ? s
                 : (Found: false, State: string.Empty, Status: string.Empty);
 
-            var (icon, stateText) = status switch
-            {
-                (false, _, _) => ("⚠️", "not found"),
-                (_, var state, _) when state.Equals("running", StringComparison.OrdinalIgnoreCase) => ("🟢", "running"),
-                (_, var state, _) when string.IsNullOrWhiteSpace(state) => ("⚪", "unknown"),
-                (_, var state, _) => ("🔴", state)
-            };
+            var gameName = string.IsNullOrWhiteSpace(c.Game) ? c.Name : c.Game;
 
-            if (status.Found && status.State.Equals("running", StringComparison.OrdinalIgnoreCase))
-                runningNames.Add(c.Name);
-
-            embed.AddField(
-                c.Name,
-                $"{icon} {stateText} ({status.Status})\nGame: {c.Game}",
-                inline: false);
+            if (!status.Found)
+                offlineLines.Add($"⚠️ {gameName} - not found");
+            else if (status.State.Equals("running", StringComparison.OrdinalIgnoreCase))
+                runningLines.Add($"🟢 {gameName} - {FormatUptime(status.Status)}");
+            else
+                offlineLines.Add($"🔴 {gameName} - {FormatOfflineTime(status.Status)}");
         }
 
-        var externalIp = await _externalIpService.GetExternalIpAsync();
-        var ipLine = externalIp != null ? $"\n🌐 IP: `{externalIp}`" : string.Empty;
-        var summary = runningNames.Count > 0
-            ? $"**Running:** {string.Join(", ", runningNames)}{ipLine}"
-            : $"**No containers running.**{ipLine}";
+        var ipDescription = externalIp != null ? $"🌐 IP: {externalIp}" : string.Empty;
 
-        await channel.SendMessageAsync(summary, embed: embed.Build());
-        _logger.LogInformation("Posted container status to channel {ChannelId}. Running: {Count}", _config.HelpChannelId, runningNames.Count);
+        var embed = new EmbedBuilder()
+            .WithTitle("HubdexServer")
+            .WithDescription(ipDescription)
+            .WithColor(runningLines.Count > 0 ? Color.Green : Color.Red)
+            .WithCurrentTimestamp();
+
+        if (runningLines.Count > 0)
+            embed.AddField("Running:", string.Join("\n", runningLines), inline: false);
+
+        if (offlineLines.Count > 0)
+            embed.AddField("Offline:", string.Join("\n", offlineLines), inline: false);
+
+        await channel.SendMessageAsync(embed: embed.Build());
+        _logger.LogInformation("Posted container status to channel {ChannelId}. Running: {Count}", _config.HelpChannelId, runningLines.Count);
+    }
+
+    private static string FormatUptime(string statusStr)
+    {
+        if (statusStr.StartsWith("Up ", StringComparison.OrdinalIgnoreCase))
+        {
+            var part = statusStr[3..];
+            var parenIdx = part.IndexOf('(');
+            if (parenIdx >= 0) part = part[..parenIdx].TrimEnd();
+            return $"online {part}";
+        }
+        return "online";
+    }
+
+    private static string FormatOfflineTime(string statusStr)
+    {
+        var agoIdx = statusStr.IndexOf(" ago", StringComparison.OrdinalIgnoreCase);
+        if (agoIdx >= 0)
+        {
+            var parenEnd = statusStr.IndexOf(')');
+            if (parenEnd >= 0)
+            {
+                var timePart = statusStr[(parenEnd + 1)..agoIdx].Trim();
+                return $"offline ({timePart})";
+            }
+        }
+        return "offline";
     }
 }
