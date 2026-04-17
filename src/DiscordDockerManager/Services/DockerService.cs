@@ -143,7 +143,13 @@ public class DockerService : IDisposable
             {
                 var match = containers.FirstOrDefault(c =>
                     c.ID.StartsWith(id, StringComparison.OrdinalIgnoreCase) ||
-                    c.Names.Any(n => n.TrimStart('/').Equals(id, StringComparison.OrdinalIgnoreCase)));
+                    c.Names.Any(n =>
+                    {
+                        var name = n.TrimStart('/');
+                        return name.Equals(id, StringComparison.OrdinalIgnoreCase) ||
+                               name.Contains(id, StringComparison.OrdinalIgnoreCase) ||
+                               id.Contains(name, StringComparison.OrdinalIgnoreCase);
+                    }));
 
                 if (match is not null)
                 {
